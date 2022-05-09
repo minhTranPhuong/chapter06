@@ -215,8 +215,9 @@ window.__require = function e(t, n, r) {
         this.node.active = bool;
       },
       handleClick: function handleClick() {
-        Emitter.instance.emit(emitterName.deleteItem);
         this._countCheck = 0;
+        Emitter.instance.emit(emitterName.deleteItem);
+        this.getComponent(cc.Button).interactable = false;
       },
       hello: function hello() {
         cc.log(1234);
