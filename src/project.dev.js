@@ -190,12 +190,16 @@ window.__require = function e(t, n, r) {
     cc.Class({
       extends: cc.Component,
       properties: {
-        _countCheck: 0
+        _countCheck: 0,
+        _evtActiveNode: null,
+        _evtIsCheck: null
       },
       onLoad: function onLoad() {
-        Emitter.instance.registerEvent("activeBtn", this.activeNode.bind(this));
-        Emitter.instance.registerEvent("activeValidateForm", this.activeNode.bind(this));
-        Emitter.instance.registerEvent("isChecked", this.isCheck.bind(this));
+        this._evtActiveNode = this.activeNode.bind(this);
+        this._evtIsCheck = this.isCheck.bind(this);
+        Emitter.instance.registerEvent(emitterName.activeBtn, this._evtActiveNode);
+        Emitter.instance.registerEvent(emitterName.activeValidateForm, this._evtActiveNode);
+        Emitter.instance.registerEvent(emitterName.isChecked, this._evtIsCheck);
       },
       isCheck: function isCheck(check) {
         this._countCheck = check ? this._countCheck + 1 : this._countCheck - 1;
@@ -211,7 +215,8 @@ window.__require = function e(t, n, r) {
         this.node.active = bool;
       },
       handleClick: function handleClick() {
-        Emitter.instance.emit("deleteItem");
+        Emitter.instance.emit(emitterName.deleteItem);
+        this._countCheck = 0;
       },
       hello: function hello() {
         cc.log(1234);
@@ -231,16 +236,19 @@ window.__require = function e(t, n, r) {
     var emitterName = require("emitterName");
     cc.Class({
       extends: cc.Component,
-      properties: {},
+      properties: {
+        _evtActiveNode: null
+      },
       onLoad: function onLoad() {
-        Emitter.instance.registerEvent("activeBtn", this.activeNode.bind(this));
+        this._evtActiveNode = this.activeNode.bind(this);
+        Emitter.instance.registerEvent(emitterName.activeBtn, this._evtActiveNode);
       },
       activeNode: function activeNode(bool) {
         this.node.active = bool;
       },
       handleClick: function handleClick() {
         this.node.active = false;
-        Emitter.instance.emit("activeValidateForm");
+        Emitter.instance.emit(emitterName.activeValidateForm);
       },
       start: function start() {}
     });
@@ -257,9 +265,12 @@ window.__require = function e(t, n, r) {
     var emitterName = require("emitterName");
     cc.Class({
       extends: cc.Component,
-      properties: {},
+      properties: {
+        _evtCheckForm: null
+      },
       onLoad: function onLoad() {
-        Emitter.instance.registerEvent("activeBtnRegister", this.checkForm.bind(this));
+        this._evtCheckForm = this.checkForm.bind(this);
+        Emitter.instance.registerEvent(emitterName.activeBtnRegister, this._evtCheckForm);
       },
       checkForm: function checkForm(value) {
         this.getComponent(cc.Button).interactable = !!value;
@@ -279,17 +290,21 @@ window.__require = function e(t, n, r) {
     var emitterName = require("emitterName");
     cc.Class({
       extends: cc.Component,
-      properties: {},
-      onLoad: function onLoad() {},
+      properties: {
+        _evtSendData: null
+      },
+      onLoad: function onLoad() {
+        this._evtSendData = this.sendData;
+      },
       start: function start() {
-        Emitter.instance.emit("activeBtn", false);
+        Emitter.instance.emit(emitterName.activeBtn, false);
       },
       onEnable: function onEnable() {
-        Emitter.instance.registerEvent("submitForm", this.sendData);
+        Emitter.instance.registerEvent(emitterName.submitForm, this._evtSendData);
       },
       sendData: function sendData(data, loginCom) {
         loginCom.node.active = false;
-        Emitter.instance.emit("showListUser", data, loginCom);
+        Emitter.instance.emit(emitterName.showListUser, data, loginCom);
       }
     });
     cc._RF.pop();
@@ -301,9 +316,25 @@ window.__require = function e(t, n, r) {
     "use strict";
     cc._RF.push(module, "a49716EVaxFy5n1Dv90ROwv", "emitterName");
     "use strict";
-    var emitterName = {
-      submit: "submit"
-    };
+    function _defineProperty(obj, key, value) {
+      key in obj ? Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      }) : obj[key] = value;
+      return obj;
+    }
+    var emitterName = _defineProperty({
+      activeBtn: "activeBtn",
+      activeValidateForm: "activeValidateForm",
+      activeBtnRegister: "activeBtnRegister",
+      changeSize: "changeSize",
+      isChecked: "isChecked",
+      deleteItem: "deleteItem",
+      submitForm: "submitForm",
+      showListUser: "showListUser"
+    }, "isChecked", "isChecked");
     module.exports = emitterName;
     cc._RF.pop();
   }, {} ],
@@ -387,20 +418,7 @@ window.__require = function e(t, n, r) {
       },
       onLoad: function onLoad() {},
       activeNode: function activeNode() {},
-      start: function start() {
-        var _this = this;
-        cc.log(123);
-        this.slider.node.active = true;
-        this.slider.getComponent(cc.ProgressBar).progress = 0;
-        var interval = setInterval(function() {
-          _this.slider.getComponent(cc.ProgressBar).progress += .01;
-          if (_this.slider.getComponent(cc.ProgressBar).progress >= 1) {
-            _this.slider.getComponent(cc.ProgressBar).progress = 0;
-            _this.slider.node.active = false;
-            _this.node.active = false;
-          }
-        }, 50);
-      }
+      start: function start() {}
     });
     cc._RF.pop();
   }, {
@@ -417,15 +435,17 @@ window.__require = function e(t, n, r) {
       extends: cc.Component,
       properties: {
         itemUser: cc.Prefab,
-        _loginCom: null
+        _loginCom: null,
+        _evtGetInfoUser: null
       },
       onEnable: function onEnable() {},
       onLoad: function onLoad() {},
       start: function start() {
+        this._evtGetInfoUser = this.getInfoUser.bind(this);
         this.enabled = false;
       },
       onDisable: function onDisable() {
-        Emitter.instance.registerEvent("showListUser", this.getInfoUser.bind(this));
+        Emitter.instance.registerEvent(emitterName.showListUser, this._evtGetInfoUser);
       },
       getInfoUser: function getInfoUser(data, loginCom) {
         this._loginCom = loginCom;
@@ -451,7 +471,7 @@ window.__require = function e(t, n, r) {
       properties: {},
       start: function start() {},
       onChange: function onChange(vl) {
-        Emitter.instance.emit("changeSize", vl.progress);
+        Emitter.instance.emit(emitterName.changeSize, vl.progress);
       }
     });
     cc._RF.pop();
@@ -468,24 +488,31 @@ window.__require = function e(t, n, r) {
     cc.Class({
       extends: cc.Component,
       properties: {
-        checkbox: cc.Component
+        checkbox: cc.Component,
+        _evtDelete: null,
+        _evtChangeSize: null
       },
       onLoad: function onLoad() {
-        Emitter.instance.registerEvent("deleteItem", this.deleteItem.bind(this));
-        Emitter.instance.registerEvent("changeSize", this.changeSize.bind(this));
+        this._evtDelete = this.deleteItem.bind(this);
+        this._evtChangeSize = this.changeSize.bind(this);
+        Emitter.instance.registerEvent(emitterName.deleteItem, this._evtDelete);
+        Emitter.instance.registerEvent(emitterName.changeSize, this._evtChangeSize);
       },
       changeSize: function changeSize(value) {
         this.node.getChildByName("userName").getComponent(cc.Label).fontSize = 8 + .125 * value * 64;
       },
       isCheck: function isCheck() {
-        Emitter.instance.emit("isChecked", this.checkbox.isChecked);
+        Emitter.instance.emit(emitterName.isChecked, this.checkbox.isChecked);
       },
       deleteItem: function deleteItem() {
-        cc.log(this.checkbox);
         var check = this.checkbox || false;
         if (true == check.isChecked) {
+          Emitter.instance.removeEvent(emitterName.deleteItem, this._evtDelete);
+          Emitter.instance.removeEvent(emitterName.changeSize, this._evtChangeSize);
           this.node.parent.removeChild(this.node);
           this.node.destroy();
+          this.destroy();
+          cc.log(this.node);
         }
       },
       start: function start() {}
@@ -506,7 +533,8 @@ window.__require = function e(t, n, r) {
       properties: {
         data: null,
         richText: cc.Component,
-        slider: cc.Component
+        slider: cc.Component,
+        _evtActiveForm: null
       },
       onLoad: function onLoad() {
         this.data = {
@@ -514,7 +542,8 @@ window.__require = function e(t, n, r) {
           password: "",
           numberPhone: ""
         };
-        Emitter.instance.registerEvent("activeValidateForm", this.activeForm.bind(this));
+        this._evtActiveForm = this.activeForm.bind(this);
+        Emitter.instance.registerEvent(emitterName.activeValidateForm, this._evtActiveForm);
       },
       start: function start() {},
       onHello: function onHello(data) {
@@ -524,11 +553,11 @@ window.__require = function e(t, n, r) {
         var filter = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;
         if (filter.test(edtEmail.string)) {
           cc.log("true");
-          Emitter.instance.emit("activeBtnRegister", true);
+          Emitter.instance.emit(emitterName.activeBtnRegister, true);
           return true;
         }
         alert("email khong h\u1ee3p l\u1ec7: example@gmail.com");
-        Emitter.instance.emit("activeBtnRegister", false);
+        Emitter.instance.emit(emitterName.activeBtnRegister, false);
         return false;
       },
       getStringEmail: function getStringEmail(edtEmail) {
@@ -542,8 +571,6 @@ window.__require = function e(t, n, r) {
       },
       submitButton: function submitButton() {
         this.loading();
-        Emitter.instance.emit("submitForm", this.data, this);
-        Emitter.instance.emit("activeBtn", true);
       },
       loading: function loading() {
         var _this = this;
@@ -554,10 +581,13 @@ window.__require = function e(t, n, r) {
           _this.slider.getComponent(cc.ProgressBar).progress += .01;
           if (_this.slider.getComponent(cc.ProgressBar).progress >= 1) {
             _this.slider.getComponent(cc.ProgressBar).progress = 0;
+            Emitter.instance.emit(emitterName.submitForm, _this.data, _this);
+            Emitter.instance.emit(emitterName.activeBtn, true);
             _this.slider.node.active = false;
             _this.richText.node.active = false;
+            clearInterval(interval);
           }
-        }, 50);
+        }, 30);
       },
       activeForm: function activeForm() {
         this.node.active = true;
